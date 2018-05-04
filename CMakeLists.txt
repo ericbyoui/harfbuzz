@@ -274,10 +274,17 @@ set (subset_project_headers
 
 ## Find and include needed header folders and libraries
 if (HB_HAVE_FREETYPE)
-  include (FindFreetype)
-  if (NOT FREETYPE_FOUND)
-    message(FATAL_ERROR "HB_HAVE_FREETYPE was set, but we failed to find it. Maybe add a CMAKE_PREFIX_PATH= to your Freetype2 install prefix")
-  endif ()
+  if(HUNTER_ENABLED)
+    hunter_add_package(freetype)
+    find_package(freetype CONFIG REQUIRED)
+    set(FREETYPE_LIBRARIES freetype::freetype)
+    get_target_property(FREETYPE_INCLUDE_DIRS freetype::freetype INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    include (FindFreetype)
+    if (NOT FREETYPE_FOUND)
+      message(FATAL_ERROR "HB_HAVE_FREETYPE was set, but we failed to find it. Maybe add a CMAKE_PREFIX_PATH= to your Freetype2 install prefix")
+    endif ()
+  endif()
 
   list(APPEND THIRD_PARTY_LIBS ${FREETYPE_LIBRARIES})
   include_directories(AFTER ${FREETYPE_INCLUDE_DIRS})
