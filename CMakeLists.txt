@@ -799,6 +799,52 @@ if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
   endif ()
 endif ()
 
+include(CMakePackageConfigHelpers)
+set(ConfigPackageLocation lib/cmake/harfbuzz)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfigVersion.cmake"
+  VERSION ${HB_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(cmake/harfbuzzConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfig.cmake"
+  INSTALL_DESTINATION "${ConfigPackageLocation}"
+)
+
+install(TARGETS harfbuzz
+  EXPORT harfbuzzTargets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/harfbuzz
+)
+
+export(EXPORT harfbuzzTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzTargets.cmake"
+  NAMESPACE harfbuzz::
+)
+
+install(EXPORT harfbuzzTargets
+  FILE
+    harfbuzzTargets.cmake
+  NAMESPACE
+    harfbuzz::
+  DESTINATION
+    ${ConfigPackageLocation}
+)
+
+install(
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfigVersion.cmake"
+  DESTINATION
+    ${ConfigPackageLocation}
+  COMPONENT
+    Devel
+)
+
 if (UNIX AND CMAKE_GENERATOR STREQUAL "Ninja")
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
