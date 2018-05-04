@@ -348,12 +348,19 @@ endif ()
 if (HB_HAVE_ICU)
   add_definitions(-DHAVE_ICU)
 
-  # https://github.com/WebKit/webkit/blob/master/Source/cmake/FindICU.cmake
-  find_package(PkgConfig)
-  pkg_check_modules(PC_ICU QUIET icu-uc)
+  if(HUNTER_ENABLED)
+    hunter_add_package(ICU)
+    find_package(ICU CONFIG REQUIRED)
+    set(ICU_LIBRARY ICU::uc)
+    get_target_property(ICU_INCLUDE_DIR ICU::uc INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    # https://github.com/WebKit/webkit/blob/master/Source/cmake/FindICU.cmake
+    find_package(PkgConfig)
+    pkg_check_modules(PC_ICU QUIET icu-uc)
 
-  find_path(ICU_INCLUDE_DIR NAMES unicode/utypes.h HINTS ${PC_ICU_INCLUDE_DIRS} ${PC_ICU_INCLUDEDIR})
-  find_library(ICU_LIBRARY NAMES libicuuc cygicuuc cygicuuc32 icuuc HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR})
+    find_path(ICU_INCLUDE_DIR NAMES unicode/utypes.h HINTS ${PC_ICU_INCLUDE_DIRS} ${PC_ICU_INCLUDEDIR})
+    find_library(ICU_LIBRARY NAMES libicuuc cygicuuc cygicuuc32 icuuc HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR})
+  endif()
 
   include_directories(${ICU_INCLUDE_DIR})
 
