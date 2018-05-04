@@ -1,4 +1,11 @@
 cmake_minimum_required(VERSION 2.8.0)
+
+include("cmake/HunterGate.cmake")
+HunterGate(
+    URL "https://github.com/ruslo/hunter/archive/v0.20.66.tar.gz"
+    SHA1 "bd907a0c2faf15071144ecca5a6d72d443375f64"
+)
+
 project(harfbuzz)
 
 enable_testing()
