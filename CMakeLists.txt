@@ -1,4 +1,11 @@
 cmake_minimum_required(VERSION 2.8.0)
+
+include("cmake/HunterGate.cmake")
+HunterGate(
+    URL "https://github.com/ruslo/hunter/archive/v0.20.66.tar.gz"
+    SHA1 "bd907a0c2faf15071144ecca5a6d72d443375f64"
+)
+
 project(harfbuzz)
 
 enable_testing()
@@ -267,10 +274,17 @@ set (subset_project_headers
 
 ## Find and include needed header folders and libraries
 if (HB_HAVE_FREETYPE)
-  include (FindFreetype)
-  if (NOT FREETYPE_FOUND)
-    message(FATAL_ERROR "HB_HAVE_FREETYPE was set, but we failed to find it. Maybe add a CMAKE_PREFIX_PATH= to your Freetype2 install prefix")
-  endif ()
+  if(HUNTER_ENABLED)
+    hunter_add_package(freetype)
+    find_package(freetype CONFIG REQUIRED)
+    set(FREETYPE_LIBRARIES freetype::freetype)
+    get_target_property(FREETYPE_INCLUDE_DIRS freetype::freetype INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    include (FindFreetype)
+    if (NOT FREETYPE_FOUND)
+      message(FATAL_ERROR "HB_HAVE_FREETYPE was set, but we failed to find it. Maybe add a CMAKE_PREFIX_PATH= to your Freetype2 install prefix")
+    endif ()
+  endif()
 
   list(APPEND THIRD_PARTY_LIBS ${FREETYPE_LIBRARIES})
   include_directories(AFTER ${FREETYPE_INCLUDE_DIRS})
@@ -334,12 +348,19 @@ endif ()
 if (HB_HAVE_ICU)
   add_definitions(-DHAVE_ICU)
 
-  # https://github.com/WebKit/webkit/blob/master/Source/cmake/FindICU.cmake
-  find_package(PkgConfig)
-  pkg_check_modules(PC_ICU QUIET icu-uc)
+  if(HUNTER_ENABLED)
+    hunter_add_package(ICU)
+    find_package(ICU CONFIG REQUIRED)
+    set(ICU_LIBRARY ICU::uc)
+    get_target_property(ICU_INCLUDE_DIR ICU::uc INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    # https://github.com/WebKit/webkit/blob/master/Source/cmake/FindICU.cmake
+    find_package(PkgConfig)
+    pkg_check_modules(PC_ICU QUIET icu-uc)
 
-  find_path(ICU_INCLUDE_DIR NAMES unicode/utypes.h HINTS ${PC_ICU_INCLUDE_DIRS} ${PC_ICU_INCLUDEDIR})
-  find_library(ICU_LIBRARY NAMES libicuuc cygicuuc cygicuuc32 icuuc HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR})
+    find_path(ICU_INCLUDE_DIR NAMES unicode/utypes.h HINTS ${PC_ICU_INCLUDE_DIRS} ${PC_ICU_INCLUDEDIR})
+    find_library(ICU_LIBRARY NAMES libicuuc cygicuuc cygicuuc32 icuuc HINTS ${PC_ICU_LIBRARY_DIRS} ${PC_ICU_LIBDIR})
+  endif()
 
   include_directories(${ICU_INCLUDE_DIR})
 
@@ -784,6 +805,52 @@ if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
     endif ()
   endif ()
 endif ()
+
+include(CMakePackageConfigHelpers)
+set(ConfigPackageLocation lib/cmake/harfbuzz)
+
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfigVersion.cmake"
+  VERSION ${HB_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(cmake/harfbuzzConfig.cmake.in
+  "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfig.cmake"
+  INSTALL_DESTINATION "${ConfigPackageLocation}"
+)
+
+install(TARGETS harfbuzz
+  EXPORT harfbuzzTargets
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/harfbuzz
+)
+
+export(EXPORT harfbuzzTargets
+  FILE "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzTargets.cmake"
+  NAMESPACE harfbuzz::
+)
+
+install(EXPORT harfbuzzTargets
+  FILE
+    harfbuzzTargets.cmake
+  NAMESPACE
+    harfbuzz::
+  DESTINATION
+    ${ConfigPackageLocation}
+)
+
+install(
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/harfbuzz/harfbuzzConfigVersion.cmake"
+  DESTINATION
+    ${ConfigPackageLocation}
+  COMPONENT
+    Devel
+)
 
 if (UNIX AND CMAKE_GENERATOR STREQUAL "Ninja")
   if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
