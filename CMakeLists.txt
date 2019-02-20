@@ -379,12 +379,19 @@ if (APPLE AND HB_HAVE_CORETEXT)
   list(APPEND project_sources ${PROJECT_SOURCE_DIR}/src/hb-coretext.cc)
   list(APPEND project_headers ${PROJECT_SOURCE_DIR}/src/hb-coretext.h)
 
+  if(APPLE AND NOT IOS AND HUNTER_ENABLED)
+    find_package(applicationservices REQUIRED)
+    list(APPEND THIRD_PARTY_LIBS applicationservices::applicationservices)
+  else()
+
   find_library(APPLICATION_SERVICES_FRAMEWORK ApplicationServices)
   if (APPLICATION_SERVICES_FRAMEWORK)
     list(APPEND THIRD_PARTY_LIBS ${APPLICATION_SERVICES_FRAMEWORK})
   endif (APPLICATION_SERVICES_FRAMEWORK)
 
   mark_as_advanced(APPLICATION_SERVICES_FRAMEWORK)
+
+  endif()
 endif ()
 
 if (WIN32 AND HB_HAVE_UNISCRIBE)

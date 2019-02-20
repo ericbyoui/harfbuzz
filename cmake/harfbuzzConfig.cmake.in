@@ -8,5 +8,9 @@ if(@HB_HAVE_ICU@)
   find_package(ICU CONFIG REQUIRED)
 endif()
 
+if(APPLE AND NOT IOS)
+  find_package(applicationservices REQUIRED)
+endif()
+
 include("${CMAKE_CURRENT_LIST_DIR}/harfbuzzTargets.cmake")
 check_required_components("@PROJECT_NAME@")
