@@ -379,9 +379,20 @@ if (APPLE AND HB_HAVE_CORETEXT)
   list(APPEND project_sources ${PROJECT_SOURCE_DIR}/src/hb-coretext.cc)
   list(APPEND project_headers ${PROJECT_SOURCE_DIR}/src/hb-coretext.h)
 
-  if(APPLE AND NOT IOS AND HUNTER_ENABLED)
-    find_package(applicationservices REQUIRED)
-    list(APPEND THIRD_PARTY_LIBS applicationservices::applicationservices)
+  if(HUNTER_ENABLED)
+    if(IOS)
+      find_package(corefoundation REQUIRED)
+      list(APPEND THIRD_PARTY_LIBS corefoundation::corefoundation)
+
+      find_package(coretext REQUIRED)
+      list(APPEND THIRD_PARTY_LIBS coretext::coretext)
+
+      find_package(coregraphics REQUIRED)
+      list(APPEND THIRD_PARTY_LIBS coregraphics::coregraphics)
+    elseif(APPLE)
+      find_package(applicationservices REQUIRED)
+      list(APPEND THIRD_PARTY_LIBS applicationservices::applicationservices)
+    endif()
   else()
 
   find_library(APPLICATION_SERVICES_FRAMEWORK ApplicationServices)

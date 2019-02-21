@@ -8,7 +8,11 @@ if(@HB_HAVE_ICU@)
   find_package(ICU CONFIG REQUIRED)
 endif()
 
-if(APPLE AND NOT IOS)
+if(IOS)
+  find_package(corefoundation REQUIRED)
+  find_package(coretext REQUIRED)
+  find_package(coregraphics REQUIRED)
+elseif(APPLE)
   find_package(applicationservices REQUIRED)
 endif()
 
